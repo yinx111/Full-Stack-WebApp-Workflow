@@ -4,6 +4,12 @@ Next, I will share step by step how to built a compact but fully functional web 
 **Host: Windows 10**<br>
 **Virtual: Ubuntu 22.04**<br>
 **VirtualBox versio: 7.2.2** 
+
+## Technology stack
+**Front：HTML/CSS/JS + JWT**<br>
+**Back：FastAPI + SQLite + JWT + Argon2 + SMTP**<br>
+**Infra：Caddy reverse proxy + DuckDNS dynamic domain name + Router port forwarding (80/443)**
+
 ## 1. Create a virtual machine
 
 <img width="570" height="626" alt="虚拟机设置" src="https://github.com/user-attachments/assets/a71c52f7-cdba-49be-8151-75d26fe47b1e" />
