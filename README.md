@@ -12,7 +12,8 @@ Next, I will share step by step how to built a compact but fully functional web 
 
 ## 1. Create a virtual machine
 
-<img width="570" height="626" alt="虚拟机设置" src="https://github.com/user-attachments/assets/a71c52f7-cdba-49be-8151-75d26fe47b1e" />
+<img width="570" height="626" alt="虚拟机设置" src="https://github.com/user-attachments/assets/6c8c1789-cd3b-446c-8f93-058e7a5028b1" />
+
 
 ## 2. Install miniconda and create conda virtual environment
 ```bash
@@ -90,7 +91,8 @@ sudo systemctl status duckdns.timer --no-pager
 ## 4. Router Port Forwarding
 Log in to your router and add 2 ports.
 
-<img width="548" height="91" alt="路由器端口" src="https://github.com/user-attachments/assets/fb142c7d-7380-4f7f-8f34-d46e6a17818d" />
+<img width="548" height="91" alt="路由器端口" src="https://github.com/user-attachments/assets/bdf63595-ebc0-4d34-8ba3-b3cd84c8fa1e" />
+
 
 Replace **192.168.11.8** to your virtual machine's local network IP.
 
@@ -140,10 +142,10 @@ You need to prepare two email addresses: one for sending emails and the other fo
 
 Turn on **2-Step Verification** in your Google account and obtain a 16-digit pass using your **App passwords**.
 
-<img width="791" height="483" alt="google2" src="https://github.com/user-attachments/assets/f64d4ce0-0609-46fa-a311-0f9a27771a09" /> 
+<img width="791" height="483" alt="google2" src="https://github.com/user-attachments/assets/508900c2-d5ed-43f0-a40b-9aeb2e71b9e2" />
 
+<img width="783" height="431" alt="google4" src="https://github.com/user-attachments/assets/e622b933-0f59-47a4-928a-6e25a8dcaaca" />
 
-<img width="783" height="431" alt="google4" src="https://github.com/user-attachments/assets/8edc0031-c937-4efb-b6f7-c387f88c3519" />
 
 ## 7. Install yolo
 ```bash
