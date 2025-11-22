@@ -1,0 +1,91 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Login | WebApp</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{--bg:#0f172a;--card:#111827;--muted:#94a3b8;--text:#e5e7eb;--brand:#22c55e;--err:#ef4444}
+  *{box-sizing:border-box} body{margin:0;background:radial-gradient(1200px 600px at 20% -10%,#1f2937,transparent),var(--bg);color:var(--text);font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial}
+  .wrap{min-height:100svh;display:grid;place-items:center;padding:24px}
+  .card{width:100%;max-width:420px;background:linear-gradient(180deg,#0b1220,#0b1220) padding-box,linear-gradient(135deg,#334155,#1f2937,#0ea5e9) border-box;border:1px solid transparent;border-radius:16px;padding:28px;box-shadow:0 20px 60px rgba(2,6,23,.5)}
+  h1{margin:0 0 8px;font-size:24px}
+  p.muted{margin:0 0 24px;color:var(--muted)}
+  label{display:block;margin:10px 0 6px}
+  input[type=email],input[type=password]{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:var(--text);outline:none}
+  input:focus{border-color:#60a5fa;box-shadow:0 0 0 3px rgba(59,130,246,.25)}
+  .row{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:6px}
+  .btn{cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:var(--text)}
+  .btn.primary{background:linear-gradient(180deg,#16a34a,#16a34a) padding-box,linear-gradient(135deg,#86efac,#22c55e,#10b981) border-box;border:1px solid transparent;font-weight:600}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .link{color:#93c5fd;text-decoration:none} .link:hover{text-decoration:underline}
+  .msg{margin-top:14px;min-height:22px}
+  .msg[aria-live]{outline:0}
+  .ok{color:#86efac}.err{color:var(--err)} .muted-small{color:var(--muted);font-size:12px}
+  .spinner{inline-size:14px;block-size:14px;border:2px solid #60a5fa;border-top-color:transparent;border-radius:50%;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(1turn)}}
+</style>
+
+<div class="wrap">
+  <main class="card">
+    <h1>Login</h1>
+    <p class="muted">Log in with your verified email. No account? <a class="link" href="/register">Sign up</a></p>
+
+    <form id="form" novalidate>
+      <label for="email">Email</label>
+      <input id="email" name="username" type="email" placeholder="name@example.com" required autocomplete="email" />
+
+      <label for="pwd">Password</label>
+      <input id="pwd" name="password" type="password" placeholder="At least 8 characters" required autocomplete="current-password" />
+
+      <div class="row">
+        <button class="btn primary" id="btn" type="submit">
+          <span class="spinner" style="display:none" id="sp"></span>
+          Login
+        </button>
+      </div>
+      <div class="msg" id="msg" aria-live="polite"></div>
+    </form>
+  </main>
+</div>
+
+<script>
+const form = document.getElementById('form');
+const btn = document.getElementById('btn');
+const sp  = document.getElementById('sp');
+const msg = document.getElementById('msg');
+
+function setLoading(v){
+  btn.disabled = v; sp.style.display = v?'inline-block':'none';
+}
+
+form.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  msg.className='msg'; msg.textContent='';
+  const email = form.username.value.trim();
+  const pwd   = form.password.value;
+  if(!email || !pwd){ msg.classList.add('err'); msg.textContent='Please enter email and password'; return; }
+
+  setLoading(true);
+  try{
+    const body = new URLSearchParams({ username: email, password: pwd });
+    const r = await fetch('/token',{ method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body });
+    const j = await r.json();
+    if(!r.ok){ throw new Error(j.detail||'Login failed'); }
+    localStorage.setItem('jwt', j.access_token);
+    location.href='/dashboard';
+  }catch(err){
+    msg.classList.add('err'); msg.textContent = err.message || 'Login failed';
+  }finally{
+    setLoading(false);
+  }
+});
+
+// If already logged in and token is not expired, redirect (soft, non-blocking)
+(async ()=>{
+  const t = localStorage.getItem('jwt'); if(!t) return;
+  try{
+    const r = await fetch('/auth/ping', {headers:{Authorization:'Bearer '+t}});
+    if(r.ok) location.replace('/dashboard');
+  }catch(_){}
+})();
+</script>
+::contentReference[oaicite:0]{index=0}

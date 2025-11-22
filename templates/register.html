@@ -1,0 +1,115 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Register | WebApp</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{--bg:#0f172a;--card:#111827;--muted:#94a3b8;--text:#e5e7eb;--brand:#22c55e;--err:#ef4444}
+  *{box-sizing:border-box} body{margin:0;background:radial-gradient(1200px 600px at 20% -10%,#1f2937,transparent),var(--bg);color:var(--text);font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial}
+  .wrap{min-height:100svh;display:grid;place-items:center;padding:24px}
+  .card{width:100%;max-width:520px;background:linear-gradient(180deg,#0b1220,#0b1220) padding-box,linear-gradient(135deg,#334155,#1f2937,#0ea5e9) border-box;border:1px solid transparent;border-radius:16px;padding:28px;box-shadow:0 20px 60px rgba(2,6,23,.5)}
+  h1{margin:0 0 8px;font-size:24px}
+  p.muted{margin:0 0 24px;color:var(--muted)}
+  label{display:block;margin:10px 0 6px}
+  input[type=email],input[type=password]{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:var(--text);outline:none}
+  input:focus{border-color:#60a5fa;box-shadow:0 0 0 3px rgba(59,130,246,.25)}
+  .row{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:12px;flex-wrap:wrap}
+  .btn{cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:var(--text)}
+  .btn.primary{background:linear-gradient(180deg,#16a34a,#16a34a) padding-box,linear-gradient(135deg,#86efac,#22c55e,#10b981) border-box;border:1px solid transparent;font-weight:600}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .link{color:#93c5fd;text-decoration:none} .link:hover{text-decoration:underline}
+  .msg{margin-top:14px;min-height:22px}
+  .ok{color:#86efac}.err{color:var(--err)} .muted{color:var(--muted)}
+  .spinner{inline-size:14px;block-size:14px;border:2px solid #60a5fa;border-top-color:transparent;border-radius:50%;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(1turn)}}
+</style>
+
+<div class="wrap">
+  <main class="card">
+    <h1>Register</h1>
+    <p class="muted">Enter your email and password twice, then click "Send verification email". After verification, return to login.</p>
+
+    <form id="reg" novalidate>
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" placeholder="name@example.com" required autocomplete="email" />
+
+      <label for="p1">Password</label>
+      <input id="p1" name="password" type="password" placeholder="At least 8 characters" required minlength="8" maxlength="128" autocomplete="new-password"/>
+
+      <label for="p2">Confirm password</label>
+      <input id="p2" name="password2" type="password" placeholder="Enter again" required minlength="8" maxlength="128" autocomplete="new-password"/>
+
+      <div class="row">
+        <button class="btn" id="resend" type="button" title="You can resend if already registered but not verified">Resend verification</button>
+        <div style="flex:1"></div>
+        <a class="link" href="/">Back to login</a>
+        <button class="btn primary" id="send" type="submit">
+          <span class="spinner" id="sp" style="display:none"></span>
+          Send verification email
+        </button>
+      </div>
+      <div class="msg" id="msg" aria-live="polite"></div>
+    </form>
+  </main>
+</div>
+
+<script>
+const form = document.getElementById('reg');
+const btnSend = document.getElementById('send');
+const btnResend = document.getElementById('resend');
+const sp = document.getElementById('sp');
+const msg = document.getElementById('msg');
+function setLoading(v){ btnSend.disabled=v; sp.style.display=v?'inline-block':'none'; }
+
+form.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  msg.className='msg'; msg.textContent='';
+  const email = form.email.value.trim();
+  const p1 = form.password.value;
+  const p2 = form.password2.value;
+  if(!email || !p1 || !p2){ msg.classList.add('err'); msg.textContent='Please complete the form'; return; }
+  if(p1 !== p2){ msg.classList.add('err'); msg.textContent='Passwords do not match'; return; }
+  if(p1.length < 8){ msg.classList.add('err'); msg.textContent='Password must be at least 8 characters'; return; }
+
+  setLoading(true);
+  try{
+    const r = await fetch('/register/send',{method:'POST', body:new FormData(form)});
+    let j=null; try{ j=await r.json(); }catch{ j={detail:'Unexpected server response'} }
+    if(!r.ok){ throw new Error(j.detail || 'Sending failed'); }
+
+    if(j.email_sent){
+      msg.classList.add('ok');
+      msg.textContent='A verification email has been sent to your mailbox. Please complete verification within 24 hours. If you do not receive it, you can click "Resend verification".';
+    }else{
+      // Fallback: email not actually sent, still open the link directly in browser
+      window.open(j.verify_url, '_blank');
+      msg.classList.add('ok');
+      msg.textContent='A verification link has been generated (email not sent) and opened in a new tab. Please complete verification manually.';
+    }
+  }catch(err){
+    msg.classList.add('err'); msg.textContent = err.message || 'Sending failed';
+  }finally{ setLoading(false); }
+});
+
+btnResend.addEventListener('click', async ()=>{
+  msg.className='msg'; msg.textContent='';
+  const email = form.email.value.trim();
+  if(!email){ msg.classList.add('err'); msg.textContent='Please enter your email before resending'; return; }
+  try{
+    const fd = new FormData(); fd.append('email', email);
+    const r = await fetch('/register/resend',{method:'POST', body:fd});
+    const j = await r.json();
+    if(!r.ok){ throw new Error(j.detail || 'Resend failed'); }
+
+    if(j.email_sent){
+      msg.classList.add('ok');
+      msg.textContent='The verification email has been resent. Please check your inbox.';
+    }else{
+      window.open(j.verify_url, '_blank');
+      msg.classList.add('ok');
+      msg.textContent='A new verification link has been generated (email not sent) and opened in a new tab.';
+    }
+  }catch(err){
+    msg.classList.add('err'); msg.textContent = err.message || 'Resend failed';
+  }
+});
+</script>

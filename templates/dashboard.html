@@ -1,0 +1,245 @@
+<!doctype html><meta charset="utf-8">
+<title>Dashboard | WebApp</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{--bg:#0f172a;--card:#0b1220;--muted:#94a3b8;--text:#e5e7eb;--ok:#86efac;--err:#ef4444;--accent:#38bdf8}
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:radial-gradient(1200px 600px at 20% -10%,#1f2937,transparent),var(--bg);
+    color:var(--text);
+    font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial
+  }
+  header{display:flex;justify-content:space-between;align-items:center;padding:18px 22px}
+  header h1{font-size:18px;margin:0}
+  .btn{
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 12px;
+    border-radius:10px;
+    border:1px solid #334155;
+    background:#0b1220;
+    color:var(--text)
+  }
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .btn.primary{
+    background:linear-gradient(180deg,#16a34a,#16a34a) padding-box,
+               linear-gradient(135deg,#86efac,#22c55e,#10b981) border-box;
+    border:1px solid transparent;
+    font-weight:600
+  }
+  .container{max-width:1000px;margin:0 auto;padding:0 22px 32px}
+  .card{
+    background:linear-gradient(180deg,#0b1220,#0b1220) padding-box,
+               linear-gradient(135deg,#334155,#1f2937,#0ea5e9) border-box;
+    border:1px solid transparent;
+    border-radius:16px;
+    padding:20px;
+    box-shadow:0 20px 60px rgba(2,6,23,.45)
+  }
+  .row{display:flex;gap:24px;flex-wrap:wrap}
+  .col{flex:1 1 320px}
+  .muted{color:var(--muted)}
+  /* Enlarge preview area so it occupies space initially */
+  #preview{
+    width:100%;
+    max-width:100%;
+    height:560px;
+    display:block;
+    border:1px dashed #334155;
+    border-radius:12px;
+    background:#020617;
+    object-fit:contain;
+  }
+  .status{margin-top:8px;min-height:22px;font-size:14px}
+  .ok{color:var(--ok)}
+  .err{color:var(--err)}
+  .spinner{
+    inline-size:14px;
+    block-size:14px;
+    border:2px solid #60a5fa;
+    border-top-color:transparent;
+    border-radius:50%;
+    animation:sp 1s linear infinite
+  }
+  @keyframes sp{to{transform:rotate(1turn)}}
+  .controls{
+    margin-top:12px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+  }
+  .controls-buttons{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+</style>
+
+<header>
+  <h1>Image recognition demo</h1>
+  <div>
+    <button class="btn" id="logout">Log out</button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="card">
+    <div class="row">
+      <div class="col">
+        <img id="preview" alt="Preview (shown after upload succeeds)"/>
+        <div class="controls">
+          <input id="file" type="file" accept="image/*" style="display:none" />
+          <div class="controls-buttons">
+            <button id="btnUpload"  class="btn">Upload</button>
+            <button id="btnStart"   class="btn primary" disabled>
+              <span class="spinner" id="spStart" style="display:none"></span>
+              Start detection
+            </button>
+            <button id="btnDownload" class="btn" disabled>Download result</button>
+          </div>
+          <div id="msg" class="status" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const token = localStorage.getItem('jwt'); if(!token){ location.href='/'; }
+const el = {
+  file:document.getElementById('file'),
+  upload:document.getElementById('btnUpload'),
+  start:document.getElementById('btnStart'),
+  spStart:document.getElementById('spStart'),
+  dl:document.getElementById('btnDownload'),
+  msg:document.getElementById('msg'),
+  preview:document.getElementById('preview'),
+  logout:document.getElementById('logout'),
+};
+
+let state = { mode:null, upload_id:null, temp_id:null, result_url:null };
+
+function setMsg(txt, cls){
+  el.msg.className='status '+(cls||'');
+  el.msg.textContent=txt||'';
+}
+function clearPreview(){ el.preview.removeAttribute('src'); }
+function setStartLoading(v){
+  el.start.disabled=v;
+  el.spStart.style.display=v?'inline-block':'none';
+}
+
+// Unified fetch: 401 → clear token and go back to login
+async function api(url,opt={}){
+  opt.headers = Object.assign({'Authorization':'Bearer '+token}, opt.headers||{});
+  const r = await fetch(url,opt);
+  if(r.status === 401){
+    localStorage.removeItem('jwt');
+    alert('Login expired or service restarted, please log in again');
+    location.href='/';
+    throw new Error('unauthorized');
+  }
+  return r;
+}
+
+// Heartbeat: check immediately, then every 20s
+(async function heartbeat(){
+  try{ await api('/auth/ping'); }catch(_){}
+  setInterval(()=>api('/auth/ping').catch(()=>{}), 20000);
+})();
+
+el.logout.onclick = ()=>{
+  localStorage.removeItem('jwt');
+  location.href='/';
+};
+
+el.upload.onclick = ()=> el.file.click();
+
+el.file.onchange = async ()=>{
+  if(!el.file.files[0]) return;
+  clearPreview();
+  el.start.disabled = true;
+  el.dl.disabled = true;
+  setMsg('', '');
+
+  const fd = new FormData();
+  fd.append('file', el.file.files[0]);
+  let r;
+  try{
+    r = await api('/upload',{method:'POST', body:fd});
+  }catch(_){
+    setMsg('Upload failed', 'err');
+    return;
+  }
+  const j = await r.json();
+  if(!r.ok){
+    setMsg(j.detail || 'Upload failed', 'err');
+    return;
+  }
+
+  state.mode = j.mode;
+  state.upload_id = j.upload_id || null;
+  state.temp_id   = j.temp_id   || null;
+
+  // Show preview after successful upload (server-accessible URL, with token)
+  if(j.preview_url){
+    el.preview.src = j.preview_url + '?token=' + encodeURIComponent(token);
+  }
+  el.start.disabled = false;
+  el.dl.disabled = true;
+};
+
+el.start.onclick = async ()=>{
+  setStartLoading(true);
+  setMsg('', '');
+
+  const fd = new FormData();
+  if(state.mode === 'persist' && state.upload_id){
+    fd.append('upload_id', state.upload_id);
+  }else if(state.mode === 'temp' && state.temp_id){
+    fd.append('temp_id', state.temp_id);
+  }else{
+    setMsg('Please upload an image first', 'err');
+    setStartLoading(false);
+    return;
+  }
+
+  let r;
+  try{
+    r = await api('/tasks/start',{method:'POST', body:fd});
+  }catch(_){
+    setMsg('Failed to create task', 'err');
+    setStartLoading(false);
+    return;
+  }
+  const j = await r.json();
+  if(!r.ok){
+    setMsg(j.detail || 'Failed to create task', 'err');
+    setStartLoading(false);
+    return;
+  }
+
+  if(j.status === 'completed' && j.result_url){
+    state.result_url = j.result_url + '?token=' + encodeURIComponent(token);
+    el.preview.src = state.result_url;  // Replace with result image
+    el.dl.disabled = false;
+  }
+  setStartLoading(false);
+};
+
+el.dl.onclick = ()=>{
+  if(!state.result_url) return;
+  const a=document.createElement('a');
+  a.href=state.result_url;
+  a.download='result.png';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+};
+</script>
+
