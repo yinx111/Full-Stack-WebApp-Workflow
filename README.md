@@ -1,14 +1,14 @@
-# Create-a-simple-image-detection-web-app-on-Ubuntu-within-a-VirtualBox-virtual-machine.
+# Full-Stack Workflow of Object Detection Web App
 Next, I will share step by step how to built a compact but fully functional web app featuring **user registration, login, image detection, result visualization, and file downloading, covering the entire full-stack workflow**.
 ## My devices
-**Host: Windows 10**<br>
-**Virtual: Ubuntu 22.04**<br>
-**VirtualBox versio: 7.2.2** 
+- Host:  **Windows 10**<br>
+- Virtual:  **Ubuntu 22.04**<br>
+- VirtualBox versio:  **7.2.2** 
 
 ## Technology stack
-**Front：HTML/CSS/JS + JWT**<br>
-**Back：FastAPI + SQLite + JWT + Argon2 + SMTP**<br>
-**Infra：Caddy reverse proxy + DuckDNS dynamic domain name + Router port forwarding (80/443)**
+- Front:  **HTML/CSS/JS + JWT**<br>
+- Back:  **FastAPI + SQLite + JWT + Argon2 + SMTP**<br>
+- Infra: **Caddy** reverse proxy + **DuckDNS** dynamic domain name + **Router port forwarding (80/443)**
 
 ## 1. Create a virtual machine
 
@@ -140,7 +140,8 @@ You need to prepare two email addresses: one for sending emails and the other fo
 
 Turn on **2-Step Verification** in your Google account and obtain a 16-digit pass using your **App passwords**.
 
-<img width="791" height="483" alt="google2" src="https://github.com/user-attachments/assets/f64d4ce0-0609-46fa-a311-0f9a27771a09" />
+<img width="791" height="483" alt="google2" src="https://github.com/user-attachments/assets/f64d4ce0-0609-46fa-a311-0f9a27771a09" /> 
+
 
 <img width="783" height="431" alt="google4" src="https://github.com/user-attachments/assets/8edc0031-c937-4efb-b6f7-c387f88c3519" />
 
@@ -263,7 +264,20 @@ Virtual machine IP   your SUB.duckdns.org
 ```
 and save it.
 
+## 12. Directory structure
 
+<img width="535" height="413" alt="目录结构" src="https://github.com/user-attachments/assets/f4de9261-3ca0-4545-a3f6-ec0a68fabc9c" />
+
+## 13. Demonstration
+
+### Login
+<img width="491" height="454" alt="login" src="https://github.com/user-attachments/assets/934def9f-818e-4884-971b-67f29026c627" />
+
+### Register
+<img width="579" height="530" alt="register" src="https://github.com/user-attachments/assets/07d0e45f-b673-4951-a2c0-96aa479cdbd2" />
+
+### Detection
+<img width="955" height="771" alt="detect result" src="https://github.com/user-attachments/assets/556bd3ce-f4de-407c-ac0a-fe2cdf2b7e14" />
 
 
 
