@@ -1,7 +1,10 @@
 fastapi
 uvicorn
-sqlalchemy "passlib[bcrypt]" "python-jose[cryptography]"
+sqlalchemy
+passlib[bcrypt]
+python-jose[cryptography]
 email-validator
--U passlib argon2-cffi
+passlib
+argon2-cffi
 jinja2
 python-multipart
