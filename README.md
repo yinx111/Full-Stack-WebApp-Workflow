@@ -32,6 +32,7 @@ Then go to https://www.duckdns.org/ apply for a free domain name, and remember t
 Create a folder named **duckdns** in work folder, and then create a file named **update.sh** inside it.
 ```bash
 sudo mkdir -p ~/webapp/duckdns
+sudo touch update.sh
 sudo nano ~/webapp/duckdns/update.sh
 ```
 
@@ -59,7 +60,7 @@ Description=DuckDNS updater
 
 [Service]
 Type=oneshot
-ExecStart=~/webapp/duckdns/update.sh
+ExecStart=/home/yourusername/webapp/duckdns/update.sh
 EOF'
 ```
 
