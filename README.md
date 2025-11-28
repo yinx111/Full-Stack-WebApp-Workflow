@@ -44,7 +44,7 @@ TOKEN="your DuckDNS_Token"
 ```
 Update the IP address of the specified DuckDNS subdomain to the public IP address of the machine.
 ```bash
-curl -s "https://www.duckdns.org/update?domains=${your SUB}&token=${your DuckDNS_Token}&ip="
+curl -s "https://www.duckdns.org/update?domains=your SUB&token=your token&ip="
 
 ```
 Turn update.sh into a script file that can be run directly.
@@ -135,7 +135,8 @@ your SUB.duckdns.org {
 
 Reload Caddy
 ```bash
-sudo systemctl reload caddy
+sudo caddy validate --config /etc/caddy/Caddyfile
+sudo systemctl restart caddy
 ```
 
 ## 6. Email verification
@@ -222,6 +223,10 @@ SMTP_USER=your email ad
 SMTP_PASS=16-digits pass
 SMTP_TLS=1
 SMTP_SSL=0
+```
+Granting executable permissions
+```bash
+chmod +x detect.sh
 ```
 
 ## 10. Create a one-click launch script
